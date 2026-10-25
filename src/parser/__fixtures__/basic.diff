@@ -1,0 +1,20 @@
+diff --git a/src/greet.ts b/src/greet.ts
+index 3b18e51..a9c4f2d 100644
+--- a/src/greet.ts
++++ b/src/greet.ts
+@@ -1,7 +1,8 @@
+ import { format } from "./format";
+ 
+-export function greet(name) {
+-  return "Hello, " + name;
++export function greet(name: string): string {
++  const trimmed = name.trim();
++  return format("Hello, " + trimmed);
+ }
+ 
+ export const DEFAULT_NAME = "world";
+@@ -20,3 +21,4 @@ export function shout(name: string) {
+   return greet(name).toUpperCase();
+ }
+ 
++export const VERSION = 2;
