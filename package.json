@@ -9,6 +9,7 @@
     "build": "tsc --noEmit && vite build",
     "start": "vite preview",
     "typecheck": "tsc --noEmit",
+    "summarize": "tsx scripts/summarize.ts",
     "test": "vitest run"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.2",
     "jsdom": "^25.0.1",
+    "tsx": "^4.19.1",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
     "vitest": "^2.1.2"

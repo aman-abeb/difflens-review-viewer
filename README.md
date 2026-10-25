@@ -12,6 +12,7 @@ A TypeScript web tool that parses unified git diffs and renders a side-by-side r
 - Unified diff parser (`src/parser`) producing files, hunks and typed lines with old/new line numbers
 - Handles multi-file diffs, added/deleted/renamed files, binary files, CRLF input, hunk headers without counts and `\ No newline at end of file` markers
 - Per-file `additions` / `deletions` totals
+- CLI summary: pipe any diff into `npm run summarize` for a per-file table of status, additions, deletions and hunks
 - Minimal React shell: paste a diff and see a per-file summary (the side-by-side viewer, risk scoring and reviewers are still to be built)
 
 ## Quickstart
@@ -23,6 +24,15 @@ npm run build     # type-check and build
 npm start         # preview the production build
 npm test
 ```
+
+Summarize a diff from the command line:
+
+```bash
+git diff | npm run summarize --silent
+git diff main...HEAD | npm run summarize --silent
+```
+
+The script exits with status 1 and a message on stderr when stdin is empty, is a terminal, or contains no diff.
 
 ## Example
 
@@ -67,6 +77,24 @@ returns:
 ]
 ```
 
+### CLI summary
+
+Running the summarizer on `src/parser/__fixtures__/rename-binary.diff` (a pure rename, a rename with edits, a new binary file and a deleted file):
+
+```bash
+npm run summarize --silent < src/parser/__fixtures__/rename-binary.diff
+```
+
+```text
+STATUS   FILE                                    ADD  DEL  HUNKS
+renamed  docs/old-name.md -> docs/new-name.md   +0   -0      0
+renamed  src/util.ts -> src/helpers.ts           +1   -1      1
+added    assets/logo.png (binary)                +0   -0      0
+deleted  legacy/old.txt                          +0   -2      1
+--------------------------------------------------------------
+4 files changed, +1 -3, 2 hunks
+```
+
 ## How it works
 
 `parseDiff(text)` in `src/parser/parseDiff.ts` is a line-by-line state machine:
@@ -78,13 +106,15 @@ returns:
 
 Types live in `src/parser/types.ts`; `src/parser/index.ts` is the public entry point.
 
+The CLI is split into a pure formatter and a thin I/O wrapper: `formatSummary(files)` in `src/cli/summarize.ts` builds the aligned table and totals line (and is unit-tested), while `scripts/summarize.ts` reads stdin, calls `parseDiff` and `formatSummary`, and sets the exit code. It runs through `tsx` via `npm run summarize`.
+
 ## Running tests
 
 ```bash
 npm test
 ```
 
-Tests run with Vitest and jsdom, fully offline, using fixture diffs in `src/parser/__fixtures__`.
+Tests run with Vitest and jsdom, fully offline, using fixture diffs in `src/parser/__fixtures__` (basic, multi-file, rename/binary/deleted and no-newline cases).
 
 <!-- builder:roadmap:start -->
 ## Status

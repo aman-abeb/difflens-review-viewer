@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import basicDiff from "./__fixtures__/basic.diff?raw";
 import multiFileDiff from "./__fixtures__/multi-file.diff?raw";
+import noNewlineDiff from "./__fixtures__/no-newline.diff?raw";
+import renameBinaryDiff from "./__fixtures__/rename-binary.diff?raw";
 import { parseDiff } from "./parseDiff";
 
 describe("parseDiff: single file", () => {
@@ -120,6 +122,129 @@ describe("parseDiff: multi-file", () => {
       ["remove", 1, null],
       ["remove", 2, null],
     ]);
+  });
+});
+
+describe("parseDiff: renames, binary and deleted files", () => {
+  const files = parseDiff(renameBinaryDiff);
+
+  it("splits the fixture into four files with the right statuses", () => {
+    expect(files.map((f) => f.status)).toEqual(["renamed", "renamed", "added", "deleted"]);
+  });
+
+  it("treats a pure rename as a hunk-free change with both paths", () => {
+    expect(files[0]).toMatchObject({
+      oldPath: "docs/old-name.md",
+      newPath: "docs/new-name.md",
+      binary: false,
+      hunks: [],
+      additions: 0,
+      deletions: 0,
+    });
+  });
+
+  it("parses the hunk of a rename with edits", () => {
+    const file = files[1];
+    expect(file).toMatchObject({
+      oldPath: "src/util.ts",
+      newPath: "src/helpers.ts",
+      binary: false,
+      additions: 1,
+      deletions: 1,
+    });
+    expect(file?.hunks).toHaveLength(1);
+    expect(file?.hunks[0]?.lines.map((l) => [l.type, l.oldLineNumber, l.newLineNumber])).toEqual([
+      ["context", 1, 1],
+      ["remove", 2, null],
+      ["add", null, 2],
+      ["context", 3, 3],
+    ]);
+  });
+
+  it("flags a new binary file without hunks", () => {
+    expect(files[2]).toMatchObject({
+      oldPath: null,
+      newPath: "assets/logo.png",
+      status: "added",
+      binary: true,
+      hunks: [],
+      additions: 0,
+      deletions: 0,
+    });
+  });
+
+  it("parses a deleted file with a null new path", () => {
+    const file = files[3];
+    expect(file).toMatchObject({
+      oldPath: "legacy/old.txt",
+      newPath: null,
+      status: "deleted",
+      binary: false,
+      additions: 0,
+      deletions: 2,
+    });
+    expect(file?.hunks[0]).toMatchObject({ oldStart: 1, oldLines: 2, newStart: 0, newLines: 0 });
+  });
+});
+
+describe("parseDiff: 'No newline at end of file' markers", () => {
+  const files = parseDiff(noNewlineDiff);
+  const flags = (index: number): Array<[string, boolean]> =>
+    (files[index]?.hunks[0]?.lines ?? []).map((l) => [l.type, l.noNewlineAtEnd]);
+
+  it("parses one file per section", () => {
+    expect(files.map((f) => f.newPath)).toEqual([
+      "old-side.txt",
+      "new-side.txt",
+      "both-sides.txt",
+      "context-side.txt",
+    ]);
+  });
+
+  it("flags the removed line when the marker is on the old side", () => {
+    expect(flags(0)).toEqual([
+      ["context", false],
+      ["remove", true],
+      ["add", false],
+      ["add", false],
+    ]);
+  });
+
+  it("flags the added line when the marker is on the new side", () => {
+    expect(flags(1)).toEqual([
+      ["context", false],
+      ["remove", false],
+      ["add", true],
+    ]);
+  });
+
+  it("flags both lines when both sides lack a trailing newline", () => {
+    expect(flags(2)).toEqual([
+      ["remove", true],
+      ["add", true],
+    ]);
+  });
+
+  it("flags an unchanged last line and keeps its line numbers", () => {
+    expect(flags(3)).toEqual([
+      ["remove", false],
+      ["add", false],
+      ["context", true],
+    ]);
+    const last = files[3]?.hunks[0]?.lines[2];
+    expect(last).toMatchObject({ content: "last", oldLineNumber: 2, newLineNumber: 2 });
+  });
+
+  it("never turns a marker into a line or counts it as a change", () => {
+    expect(files.map((f) => [f.additions, f.deletions])).toEqual([
+      [2, 1],
+      [1, 1],
+      [1, 1],
+      [1, 1],
+    ]);
+    expect(files.flatMap((f) => f.hunks.flatMap((h) => h.lines)).map((l) => l.content)).not.toContain(
+      " No newline at end of file",
+    );
   });
 });
 

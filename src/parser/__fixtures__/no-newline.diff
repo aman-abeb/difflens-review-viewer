@@ -1,0 +1,37 @@
+diff --git a/old-side.txt b/old-side.txt
+index aaaaaaa..bbbbbbb 100644
+--- a/old-side.txt
++++ b/old-side.txt
+@@ -1,2 +1,3 @@
+ alpha
+-beta
+\ No newline at end of file
++beta
++gamma
+diff --git a/new-side.txt b/new-side.txt
+index ccccccc..ddddddd 100644
+--- a/new-side.txt
++++ b/new-side.txt
+@@ -1,2 +1,2 @@
+ alpha
+-beta
++beta!
+\ No newline at end of file
+diff --git a/both-sides.txt b/both-sides.txt
+index eeeeeee..fffffff 100644
+--- a/both-sides.txt
++++ b/both-sides.txt
+@@ -1 +1 @@
+-one
+\ No newline at end of file
++uno
+\ No newline at end of file
+diff --git a/context-side.txt b/context-side.txt
+index 1010101..2020202 100644
+--- a/context-side.txt
++++ b/context-side.txt
+@@ -1,2 +1,2 @@
+-first
++FIRST
+ last
+\ No newline at end of file
