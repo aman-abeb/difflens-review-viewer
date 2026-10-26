@@ -13,7 +13,8 @@ A TypeScript web tool that parses unified git diffs and renders a side-by-side r
 - Handles multi-file diffs, added/deleted/renamed files, binary files, CRLF input, hunk headers without counts and `\ No newline at end of file` markers
 - Per-file `additions` / `deletions` totals
 - CLI summary: pipe any diff into `npm run summarize` for a per-file table of status, additions, deletions and hunks
-- Minimal React shell: paste a diff and see a per-file summary (the side-by-side viewer, risk scoring and reviewers are still to be built)
+- Side-by-side viewer (`src/viewer`): removed and added lines are aligned in shared rows, with old/new line numbers, add/remove highlighting, rename headers, a binary-file placeholder and `\ No newline at end of file` markers
+- Minimal React shell: starts with a sample diff and re-renders when a diff is pasted (file list sidebar, collapsing, risk scoring and reviewers are still to be built)
 
 ## Quickstart
 
@@ -77,6 +78,13 @@ returns:
 ]
 ```
 
+`alignHunk` turns that hunk into two side-by-side rows. The context line sits on both sides, and the removal is paired with the addition:
+
+```text
+ 1 | hello  |  1 | hello
+ 2 | world  |  2 | there
+```
+
 ### CLI summary
 
 Running the summarizer on `src/parser/__fixtures__/rename-binary.diff` (a pure rename, a rename with edits, a new binary file and a deleted file):
@@ -108,13 +116,15 @@ Types live in `src/parser/types.ts`; `src/parser/index.ts` is the public entry p
 
 The CLI is split into a pure formatter and a thin I/O wrapper: `formatSummary(files)` in `src/cli/summarize.ts` builds the aligned table and totals line (and is unit-tested), while `scripts/summarize.ts` reads stdin, calls `parseDiff` and `formatSummary`, and sets the exit code. It runs through `tsx` via `npm run summarize`.
 
+The viewer follows the same split. `alignHunk(hunk)` in `src/viewer/alignHunk.ts` is a pure function that turns a hunk's typed lines into `{ left, right }` rows: context lines go on both sides, and each run of consecutive removals and additions is paired index by index with the shorter side padded by empty cells. `SideBySideFile` in `src/viewer/SideBySideFile.tsx` renders those rows as one table per hunk (old number, old text, new number, new text) and styles them through the `diff-add`, `diff-remove`, `diff-context` and `diff-empty` classes in `viewer.css`.
+
 ## Running tests
 
 ```bash
 npm test
 ```
 
-Tests run with Vitest and jsdom, fully offline, using fixture diffs in `src/parser/__fixtures__` (basic, multi-file, rename/binary/deleted and no-newline cases).
+Tests run with Vitest and jsdom, fully offline, using fixture diffs in `src/parser/__fixtures__` (basic, multi-file, rename/binary/deleted and no-newline cases). Viewer tests cover row alignment (`alignHunk.test.ts`) and rendering with Testing Library (`SideBySideFile.test.tsx`, `App.test.tsx`).
 
 <!-- builder:roadmap:start -->
 ## Status

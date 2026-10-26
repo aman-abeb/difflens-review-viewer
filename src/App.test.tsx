@@ -16,19 +16,30 @@ const DIFF = [
 describe("App", () => {
   afterEach(cleanup);
 
-  it("renders no files before a diff is pasted", () => {
+  it("renders the basic sample diff side by side by default", () => {
     render(<App />);
-    expect(screen.queryAllByRole("listitem")).toHaveLength(0);
+    expect(screen.getAllByTestId("diff-file")).toHaveLength(1);
+    expect(screen.getByRole("heading", { name: "src/greet.ts" })).toBeTruthy();
+    expect(screen.getAllByTestId("diff-row")).toHaveLength(12);
   });
 
-  it("lists parsed files with churn after pasting a diff", () => {
+  it("re-renders the viewer after pasting a different diff", () => {
     render(<App />);
     fireEvent.change(screen.getByLabelText("Unified diff"), {
       target: { value: DIFF },
     });
-    const items = screen.getAllByRole("listitem");
-    expect(items).toHaveLength(1);
-    expect(items[0]?.textContent).toContain("hello.txt");
-    expect(items[0]?.textContent).toContain("+1 -1");
+    expect(screen.getByRole("heading", { name: "hello.txt" })).toBeTruthy();
+    const rows = screen.getAllByTestId("diff-row");
+    expect(rows).toHaveLength(2);
+    expect(rows[1]?.textContent).toContain("world");
+    expect(rows[1]?.textContent).toContain("there");
+  });
+
+  it("renders no files when the textarea is cleared", () => {
+    render(<App />);
+    fireEvent.change(screen.getByLabelText("Unified diff"), {
+      target: { value: "" },
+    });
+    expect(screen.queryAllByTestId("diff-file")).toHaveLength(0);
   });
 });
