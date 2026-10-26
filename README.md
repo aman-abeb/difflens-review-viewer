@@ -129,11 +129,11 @@ Tests run with Vitest and jsdom, fully offline, using fixture diffs in `src/pars
 <!-- builder:roadmap:start -->
 ## Status
 
-**In active development:** 1 of 3 milestones done.
+**In active development:** 2 of 3 milestones done.
 
 ## Roadmap
 
 - [x] **Unified diff parser and CLI summary**: Set up Vite + TypeScript + Vitest. Implement a unified diff parser producing files, hunks, and typed lines with old/new line numbers; handle renames, new/deleted files, binary files, and no-newline markers. Add fixture diffs and thorough unit tests, plus a small Node script that prints a per-file summary (additions, deletions, hunks) from a diff on stdin.
-- [ ] **Side-by-side React viewer**: Build the React UI: paste/upload a diff, file list sidebar with churn stats, and a side-by-side hunk view that aligns removed and added lines, highlights intra-line word changes, and supports collapsing files. Add component tests with Testing Library for alignment, line numbers, and collapse behavior, and include sample diffs to load with one click.
+- [x] **Side-by-side React viewer**: Build the React UI: paste/upload a diff, file list sidebar with churn stats, and a side-by-side hunk view that aligns removed and added lines, highlights intra-line word changes, and supports collapsing files. Add component tests with Testing Library for alignment, line numbers, and collapse behavior, and include sample diffs to load with one click.
 - [ ] **Risk scoring and pluggable reviewer**: Define a Reviewer interface returning findings with file, line, severity, and message. Implement the offline rule-based reviewer (secrets-like strings, debug statements, TODO/FIXME, deleted tests, large churn, lockfile-only changes) and an aggregate per-file risk score shown as badges and inline annotations. Add an env-gated LLM reviewer behind the same interface with a mocked fetch in tests. Finish with README screenshot, sample report, and architecture notes.
 <!-- builder:roadmap:end -->
