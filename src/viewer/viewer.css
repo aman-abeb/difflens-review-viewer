@@ -17,6 +17,32 @@
   border-bottom: 1px solid #d0d7de;
 }
 
+.diff-file-collapsed .diff-file-header {
+  border-bottom: none;
+}
+
+.diff-toggle {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #57606a;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.diff-toggle:hover {
+  background: #eaeef2;
+}
+
+.diff-toggle:focus-visible {
+  outline: 2px solid #0969da;
+  outline-offset: 1px;
+}
+
 .diff-file-path {
   margin: 0;
   font-size: 13px;

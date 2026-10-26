@@ -1,5 +1,5 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import basicDiff from "../parser/__fixtures__/basic.diff?raw";
 import noNewlineDiff from "../parser/__fixtures__/no-newline.diff?raw";
 import renameBinaryDiff from "../parser/__fixtures__/rename-binary.diff?raw";
@@ -126,5 +126,63 @@ describe("SideBySideFile", () => {
     expect(markers).toHaveLength(2);
     expect(markers.map((m) => m.closest("td")?.className.includes("diff-remove"))).toEqual([true, false]);
     expect(markers[1]?.closest("td")?.className).toContain("diff-add");
+  });
+});
+
+describe("SideBySideFile collapsing", () => {
+  afterEach(cleanup);
+
+  it("starts expanded with an aria-expanded toggle in the header", () => {
+    render(<SideBySideFile file={fileAt(basicDiff, 0)} />);
+    const toggle = screen.getByRole("button", { name: "Collapse src/greet.ts" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getAllByRole("table")).toHaveLength(2);
+  });
+
+  it("hides the hunks and flips aria-expanded when the toggle is clicked", () => {
+    render(<SideBySideFile file={fileAt(basicDiff, 0)} />);
+    fireEvent.click(screen.getByRole("button", { name: "Collapse src/greet.ts" }));
+
+    const toggle = screen.getByRole("button", { name: "Expand src/greet.ts" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryAllByRole("table")).toHaveLength(0);
+    expect(screen.queryAllByTestId("diff-row")).toHaveLength(0);
+  });
+
+  it("keeps the heading, status and churn stats visible while collapsed", () => {
+    render(<SideBySideFile file={fileAt(basicDiff, 0)} />);
+    fireEvent.click(screen.getByRole("button", { name: "Collapse src/greet.ts" }));
+    expect(screen.getByRole("heading", { name: "src/greet.ts" })).toBeTruthy();
+    expect(screen.getByText("modified")).toBeTruthy();
+    expect(screen.getByText("+4 -2")).toBeTruthy();
+  });
+
+  it("expands again on a second click", () => {
+    render(<SideBySideFile file={fileAt(basicDiff, 0)} />);
+    fireEvent.click(screen.getByRole("button", { name: "Collapse src/greet.ts" }));
+    fireEvent.click(screen.getByRole("button", { name: "Expand src/greet.ts" }));
+    expect(screen.getAllByTestId("diff-row")).toHaveLength(12);
+    expect(screen.getByRole("button", { name: "Collapse src/greet.ts" }).getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("hides placeholders for binary files when collapsed", () => {
+    render(<SideBySideFile file={fileAt(renameBinaryDiff, 2)} />);
+    fireEvent.click(screen.getByRole("button", { name: "Collapse assets/logo.png" }));
+    expect(screen.queryByText("Binary file")).toBeNull();
+  });
+
+  it("follows the collapsed prop and reports clicks through onToggle when controlled", () => {
+    const onToggle = vi.fn();
+    const file = fileAt(basicDiff, 0);
+    const { rerender } = render(<SideBySideFile file={file} collapsed onToggle={onToggle} />);
+    expect(screen.queryAllByRole("table")).toHaveLength(0);
+
+    fireEvent.click(screen.getByRole("button", { name: "Expand src/greet.ts" }));
+    expect(onToggle).toHaveBeenCalledTimes(1);
+    // Still collapsed: the parent owns the state and has not changed it.
+    expect(screen.queryAllByRole("table")).toHaveLength(0);
+
+    rerender(<SideBySideFile file={file} collapsed={false} onToggle={onToggle} />);
+    expect(screen.getAllByRole("table")).toHaveLength(2);
   });
 });

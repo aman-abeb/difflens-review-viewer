@@ -1,3 +1,4 @@
+import { useId, useState } from "react";
 import type { ReactElement } from "react";
 import type { DiffFile } from "../parser";
 import { alignHunk } from "./alignHunk";
@@ -65,23 +66,66 @@ function FileBody({ file }: { file: DiffFile }): ReactElement {
   );
 }
 
+/** Props of {@link SideBySideFile}. */
+export interface SideBySideFileProps {
+  file: DiffFile;
+  /**
+   * Controlled collapsed state. When omitted the component keeps its own
+   * state, starting expanded.
+   */
+  collapsed?: boolean;
+  /** Called when the header toggle is clicked, in both controlled and uncontrolled mode. */
+  onToggle?: () => void;
+}
+
 /**
- * Renders one parsed file as a side-by-side diff: a header with the path and
- * status, then one table per hunk with old and new line numbers and text in
- * aligned columns. Binary files show a placeholder instead of hunks.
+ * Renders one parsed file as a side-by-side diff: a header with the path,
+ * status, churn and a collapse toggle (`aria-expanded`), then one table per
+ * hunk with old and new line numbers and text in aligned columns. Binary files
+ * show a placeholder instead of hunks. Collapsing hides the body but keeps the
+ * header and its churn stats visible.
  */
-export function SideBySideFile({ file }: { file: DiffFile }): ReactElement {
+export function SideBySideFile({ file, collapsed, onToggle }: SideBySideFileProps): ReactElement {
   const label = fileLabel(file);
+  const bodyId = useId();
+  const [internalCollapsed, setInternalCollapsed] = useState(false);
+  const isCollapsed = collapsed ?? internalCollapsed;
+
+  const handleToggle = (): void => {
+    if (collapsed === undefined) {
+      setInternalCollapsed((current) => !current);
+    }
+    onToggle?.();
+  };
+
   return (
-    <section className="diff-file" data-testid="diff-file" aria-label={`Diff of ${label}`}>
+    <section
+      className={isCollapsed ? "diff-file diff-file-collapsed" : "diff-file"}
+      data-testid="diff-file"
+      aria-label={`Diff of ${label}`}
+    >
       <header className="diff-file-header">
+        <button
+          type="button"
+          className="diff-toggle"
+          aria-expanded={!isCollapsed}
+          aria-controls={isCollapsed ? undefined : bodyId}
+          aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${label}`}
+          onClick={handleToggle}
+        >
+          {isCollapsed ? "▸" : "▾"}
+        </button>
         <h2 className="diff-file-path">{label}</h2>
         <span className={`diff-status diff-status-${file.status}`}>{file.status}</span>
         {!file.binary && (
           <span className="diff-churn">{`+${file.additions} -${file.deletions}`}</span>
         )}
       </header>
-      <FileBody file={file} />
+      {!isCollapsed && (
+        <div id={bodyId} className="diff-file-body">
+          <FileBody file={file} />
+        </div>
+      )}
     </section>
   );
 }
