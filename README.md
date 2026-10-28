@@ -129,11 +129,19 @@ Tests run with Vitest and jsdom, fully offline, using fixture diffs in `src/pars
 <!-- builder:roadmap:start -->
 ## Status
 
-**In active development:** 3 of 3 milestones done.
+**Complete.** DiffLens is a TypeScript/React tool that parses unified git diffs and renders a side-by-side review view with aligned line numbers, intra-line word highlighting, and collapsible files. It ships a pluggable Reviewer interface with an offline rule-based implementation (secrets-like strings, debug statements, TODO/FIXME, deleted tests, large churn, lockfile-only changes) plus an env-gated LLM reviewer, surfacing per-file risk scores with human-readable reasons. The project includes a CLI diff summarizer, fixture-driven parser tests, and a full test suite (123 tests) that runs offline with no API keys.
 
 ## Roadmap
 
 - [x] **Unified diff parser and CLI summary**: Set up Vite + TypeScript + Vitest. Implement a unified diff parser producing files, hunks, and typed lines with old/new line numbers; handle renames, new/deleted files, binary files, and no-newline markers. Add fixture diffs and thorough unit tests, plus a small Node script that prints a per-file summary (additions, deletions, hunks) from a diff on stdin.
 - [x] **Side-by-side React viewer**: Build the React UI: paste/upload a diff, file list sidebar with churn stats, and a side-by-side hunk view that aligns removed and added lines, highlights intra-line word changes, and supports collapsing files. Add component tests with Testing Library for alignment, line numbers, and collapse behavior, and include sample diffs to load with one click.
 - [x] **Risk scoring and pluggable reviewer**: Define a Reviewer interface returning findings with file, line, severity, and message. Implement the offline rule-based reviewer (secrets-like strings, debug statements, TODO/FIXME, deleted tests, large churn, lockfile-only changes) and an aggregate per-file risk score shown as badges and inline annotations. Add an env-gated LLM reviewer behind the same interface with a mocked fetch in tests. Finish with README screenshot, sample report, and architecture notes.
+
+## Ideas for future work
+
+- Add syntax highlighting per language in the side-by-side view
+- Support loading diffs directly from a GitHub PR URL
+- Add a unified (inline) view toggle alongside side-by-side
+- Allow custom rule configuration/weights for the offline reviewer
+- Export a shareable HTML or Markdown risk report
 <!-- builder:roadmap:end -->
